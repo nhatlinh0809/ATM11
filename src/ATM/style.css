@@ -1,0 +1,30 @@
+.title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-alignment: center;
+    -fx-fill: #37474f;
+}
+
+.input-field {
+    -fx-padding: 5;
+    -fx-font-size: 14px;
+	-fx-padding: 10;
+}
+
+#loginButton {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+	-fx-padding: 10;
+}
+
+.output-area {
+    -fx-text-fill: black;
+    -fx-background-color: #f0f0f0;
+    -fx-padding: 10;
+    -fx-font-size: 14px;
+}
+.welcome-title{
+	-fx-font-size: 18px;
+	-fx-color: #ff5733;
+	-fx-font-weight: bold;
+}
