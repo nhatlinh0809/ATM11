@@ -210,44 +210,37 @@ public class ATMApp extends Application {
 				e.printStackTrace();
 			}
 		}
-		private boolean checkBalance(double amount) {
-		    try {
-		        String query = "SELECT balance FROM accounts WHERE account_id = ?";
-		        PreparedStatement stmt = connection.prepareStatement(query);
-		        stmt.setString(1, currentAccountId);
-
-		        ResultSet rs = stmt.executeQuery();
-		        if (rs.next()) {
-		            double currentBalance = rs.getDouble("balance");
-		            return currentBalance >= amount;  // Kiểm tra nếu số dư hiện tại đủ cho giao dịch
-		        }
-		    } catch (SQLException e) {
-		        e.printStackTrace();
-		    }
-		    return false;  // Nếu có lỗi, không đủ số dư
-		}
- 
-
+		
 		private void handleWithdraw() {
-			TextInputDialog withdrawDialog = new TextInputDialog();
-			withdrawDialog.setTitle("Rút tiền");
-			withdrawDialog.setHeaderText("Nhập số tiền cần rút");
+		    TextInputDialog withdrawDialog = new TextInputDialog();
+		    withdrawDialog.setTitle("Rút tiền");
+		    withdrawDialog.setHeaderText("Nhập số tiền cần rút");
 
-			withdrawDialog.showAndWait().ifPresent(input -> {
-				try {
-					double amount = Double.parseDouble(input);
-					if (updateBalance(-amount)) {
-						recordTransaction("Rút tiền: -" + amount);
-						showBalance();
-					} else { 
-						outputArea.setText("Số dư không đủ.");
-					}
-				} catch (NumberFormatException e) {
-					outputArea.setText("Vui lòng nhập số tiền hợp lệ.");
-				}
+		    withdrawDialog.showAndWait().ifPresent(input -> {
+		        try {
+		            double amount = Double.parseDouble(input);
 
-			});
+		            // Kiểm tra số dư trước khi thực hiện giao dịch
+		            if (checkBalance(amount)) {
+		                if (updateBalance(-amount)) {
+		                    recordTransaction("Rút tiền: -" + amount);
+		                    showBalance();
+		                } else {
+		                    outputArea.setText("Giao dịch không thành công.");
+		                }
+		            } else {
+		                outputArea.setText("Số dư không đủ.");
+		            }
+		        } catch (NumberFormatException e) {
+		            outputArea.setText("Vui lòng nhập số tiền hợp lệ.");
+		        }
+		    });
 		}
+
+		private boolean checkBalance(double amount) {
+			// TODO Auto-generated method stub
+			return false;
+		} 
 
 		private void handleDeposit() {
 		    TextInputDialog depositDialog = new TextInputDialog();
@@ -295,7 +288,7 @@ public class ATMApp extends Application {
 				stmt.setString(1, transaction);
 				stmt.setString(2, currentAccountId);
 				stmt.executeUpdate();
-			} catch (SQLException e) {
+			} catch (SQLException e) { 
 				e.printStackTrace();
 			}
 		}
