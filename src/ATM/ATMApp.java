@@ -210,6 +210,23 @@ public class ATMApp extends Application {
 				e.printStackTrace();
 			}
 		}
+		private boolean checkBalance(double amount) {
+		    try {
+		        String query = "SELECT balance FROM accounts WHERE account_id = ?";
+		        PreparedStatement stmt = connection.prepareStatement(query);
+		        stmt.setString(1, currentAccountId);
+
+		        ResultSet rs = stmt.executeQuery();
+		        if (rs.next()) {
+		            double currentBalance = rs.getDouble("balance");
+		            return currentBalance >= amount;  // Kiểm tra nếu số dư hiện tại đủ cho giao dịch
+		        }
+		    } catch (SQLException e) {
+		        e.printStackTrace();
+		    }
+		    return false;  // Nếu có lỗi, không đủ số dư
+		}
+ 
 
 		private void handleWithdraw() {
 			TextInputDialog withdrawDialog = new TextInputDialog();
@@ -222,32 +239,40 @@ public class ATMApp extends Application {
 					if (updateBalance(-amount)) {
 						recordTransaction("Rút tiền: -" + amount);
 						showBalance();
-					} else {
+					} else { 
 						outputArea.setText("Số dư không đủ.");
 					}
 				} catch (NumberFormatException e) {
 					outputArea.setText("Vui lòng nhập số tiền hợp lệ.");
 				}
+
 			});
 		}
 
 		private void handleDeposit() {
-			TextInputDialog depositDialog = new TextInputDialog();
-			depositDialog.setTitle("Gửi tiền");
-			depositDialog.setHeaderText("Nhập số tiền cần gửi");
+		    TextInputDialog depositDialog = new TextInputDialog();
+		    depositDialog.setTitle("Gửi tiền");
+		    depositDialog.setHeaderText("Nhập số tiền cần gửi");
 
-			depositDialog.showAndWait().ifPresent(input -> {
-				try {
-					double amount = Double.parseDouble(input);
-					if (updateBalance(amount)) {
-						recordTransaction("Gửi tiền: +" + amount);
-						showBalance();
-					}
-				} catch (NumberFormatException e) {
-					outputArea.setText("Vui lòng nhập số tiền hợp lệ.");
-				}
-			});
+		    depositDialog.showAndWait().ifPresent(input -> {
+		        try {
+		            double amount = Double.parseDouble(input);
+
+		            // Kiểm tra nếu số tiền gửi là bội số của 10000
+		            if (amount % 10000 != 0) {
+		                outputArea.setText("Vui lòng gửi tiền là bội số của 10.000.");
+		            } else {
+		                if (updateBalance(amount)) {
+		                    recordTransaction("Gửi tiền: +" + amount);
+		                    showBalance();
+		                }
+		            }
+		        } catch (NumberFormatException e) {
+		            outputArea.setText("Vui lòng nhập số tiền hợp lệ.");
+		        }
+		    });
 		}
+
 
 		private boolean updateBalance(double amount) {
 			try {
