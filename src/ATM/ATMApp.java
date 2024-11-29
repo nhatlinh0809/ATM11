@@ -48,8 +48,7 @@ public class ATMApp extends Application {
         }
     }
 
-    // Show Welcome Screen
-    public void showWelcomeScreen(BorderPane root, Stage primaryStage) {
+    private void showWelcomeScreen(BorderPane root, Stage primaryStage) {
         VBox welcomePanel = new VBox(10);
         welcomePanel.setAlignment(Pos.CENTER);
 
@@ -64,8 +63,7 @@ public class ATMApp extends Application {
         pause.play();
     }
 
-    // Show Login Panel
-    public void showLoginPanel(BorderPane root, Stage primaryStage) {
+    private void showLoginPanel(BorderPane root, Stage primaryStage) {
         VBox loginPanel = new VBox(10);
         loginPanel.setAlignment(Pos.CENTER);
 
@@ -118,8 +116,7 @@ public class ATMApp extends Application {
         return false;
     }
 
-    // Show ATM Panel
-    public void showATMPanel(BorderPane root, Stage primaryStage) {
+    private void showATMPanel(BorderPane root, Stage primaryStage) {
         VBox atmPanel = new VBox(10);
         atmPanel.setAlignment(Pos.CENTER);
 
@@ -143,7 +140,6 @@ public class ATMApp extends Application {
         root.setCenter(atmPanel);
     }
 
-    // Show Balance
     private void showBalance() {
         try {
             String query = "SELECT balance FROM accounts WHERE account_id = ?";
@@ -156,10 +152,10 @@ public class ATMApp extends Application {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            outputArea.setText("Lỗi truy vấn cơ sở dữ liệu.");
         }
     }
 
-    // Show Transaction History
     private void showTransactionHistory() {
         try {
             String query = "SELECT transaction_history FROM accounts WHERE account_id = ?";
@@ -170,23 +166,18 @@ public class ATMApp extends Application {
             if (rs.next()) {
                 String transactionHistory = rs.getString("transaction_history");
 
-                // Kiểm tra nếu có lịch sử giao dịch
                 if (transactionHistory != null && !transactionHistory.isEmpty()) {
-                    // Tạo đối tượng DecimalFormat để định dạng số tiền
-                    DecimalFormat df = new DecimalFormat("#,##0.00"); // Định dạng với phần nghìn và 2 chữ số thập
+                    DecimalFormat df = new DecimalFormat("#,##0.00");
 
-                    // Chia tách các dòng giao dịch và định dạng số tiền
                     String[] transactions = transactionHistory.split("\n");
                     StringBuilder formattedHistory = new StringBuilder("Lịch sử giao dịch:\n");
 
                     for (String transaction : transactions) {
-                        // Giả sử mỗi giao dịch có định dạng như "2024-11-29 15:30:00 - Rút tiền: -50000"
                         String[] transactionParts = transaction.split(" - ");
                         if (transactionParts.length == 2) {
                             String dateTime = transactionParts[0];
                             String transactionDetail = transactionParts[1];
 
-                            // Định dạng số tiền nếu có
                             try {
                                 String formattedAmount = df.format(
                                         Double.parseDouble(transactionDetail.split(": ")[1].replaceAll(",", "")));
@@ -205,38 +196,10 @@ public class ATMApp extends Application {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            outputArea.setText("Lỗi truy vấn cơ sở dữ liệu.");
         }
     }
 
-    // Handle Deposit
-    public void handleDeposit() {
-        TextInputDialog depositDialog = new TextInputDialog();
-        depositDialog.setTitle("Gửi tiền");
-        depositDialog.setHeaderText("Nhập số tiền cần gửi");
-
-        depositDialog.showAndWait().ifPresent(input -> {
-            try {
-                double amount = Double.parseDouble(input);
-
-                // Kiểm tra nếu số tiền gửi là bội số của 10000
-                if (amount % 10000 != 0) {
-                    outputArea.setText("Vui lòng gửi tiền là bội số của 10.000.");
-                } else {
-                    if (updateBalance(amount)) {
-                        recordTransaction("Gửi tiền: +" + amount);
-                        showBalance();
-
-                        // Hiển thị thông báo giao dịch thành công
-                        showSuccessAlert("Gửi tiền thành công", "Bạn đã gửi " + amount + " VND.");
-                    }
-                }
-            } catch (NumberFormatException e) {
-                outputArea.setText("Vui lòng nhập số tiền hợp lệ.");
-            }
-        });
-    }
-
-    // Handle Withdraw
     private void handleWithdraw() {
         TextInputDialog withdrawDialog = new TextInputDialog();
         withdrawDialog.setTitle("Rút tiền");
@@ -246,13 +209,11 @@ public class ATMApp extends Application {
             try {
                 double amount = Double.parseDouble(input);
 
-                // Kiểm tra số dư trước khi thực hiện giao dịch
                 if (checkBalance(amount)) {
                     if (updateBalance(-amount)) {
                         recordTransaction("Rút tiền: -" + amount);
                         showBalance();
 
-                        // Hiển thị thông báo giao dịch thành công
                         showSuccessAlert("Rút tiền thành công", "Bạn đã rút " + amount + " VND.");
                     } else {
                         outputArea.setText("Giao dịch không thành công.");
@@ -264,49 +225,39 @@ public class ATMApp extends Application {
         });
     }
 
-    // Show Success Alert
+    private void handleDeposit() {
+        TextInputDialog depositDialog = new TextInputDialog();
+        depositDialog.setTitle("Gửi tiền");
+        depositDialog.setHeaderText("Nhập số tiền cần gửi");
+
+        depositDialog.showAndWait().ifPresent(input -> {
+            try {
+                double amount = Double.parseDouble(input);
+
+                if (amount % 10000 != 0) {
+                    outputArea.setText("Vui lòng gửi tiền là bội số của 10.000.");
+                } else {
+                    if (updateBalance(amount)) {
+                        recordTransaction("Gửi tiền: +" + amount);
+                        showBalance();
+
+                        showSuccessAlert("Gửi tiền thành công", "Bạn đã gửi " + amount + " VND.");
+                    }
+                }
+            } catch (NumberFormatException e) {
+                outputArea.setText("Vui lòng nhập số tiền hợp lệ.");
+            }
+        });
+    }
+
     private void showSuccessAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
-        alert.setHeaderText(null); // Không có tiêu đề
-        alert.setContentText(message); // Nội dung thông báo
-
+        alert.setHeaderText(null);
+        alert.setContentText(message);
         alert.showAndWait();
     }
 
-    // Update Balance
-    private boolean updateBalance(double amount) {
-        try {
-            String query = "UPDATE accounts SET balance = balance + ? WHERE account_id = ?";
-            PreparedStatement stmt = connection.prepareStatement(query);
-            stmt.setDouble(1, amount);
-            stmt.setString(2, currentAccountId);
-
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    // Record Transaction
-    private void recordTransaction(String transaction) {
-        try {
-            String currentTime = java.time.LocalDateTime.now()
-                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            String transactionWithTime = currentTime + " - " + transaction;
-
-            String query = "UPDATE accounts SET transaction_history = CONCAT(IFNULL(transaction_history, ''), ?, '\n') WHERE account_id = ?";
-            PreparedStatement stmt = connection.prepareStatement(query);
-            stmt.setString(1, transactionWithTime);
-            stmt.setString(2, currentAccountId);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Check Balance
     private boolean checkBalance(double amount) {
         try {
             String query = "SELECT balance FROM accounts WHERE account_id = ?";
@@ -319,13 +270,57 @@ public class ATMApp extends Application {
                 if (currentBalance >= amount) {
                     return true;
                 } else {
-                    outputArea.setText("Số dư không đủ để thực hiện giao dịch.");
-                    return false;
+                    outputArea.setText("Số dư không đủ.");
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
+    }
+
+    private boolean updateBalance(double amount) {
+        try {
+            String query = "UPDATE accounts SET balance = balance + ? WHERE account_id = ?";
+            PreparedStatement stmt = connection.prepareStatement(query);
+            stmt.setDouble(1, amount);
+            stmt.setString(2, currentAccountId);
+
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    private void recordTransaction(String transactionDetail) {
+        try {
+            String query = "SELECT transaction_history FROM accounts WHERE account_id = ?";
+            PreparedStatement stmt = connection.prepareStatement(query);
+            stmt.setString(1, currentAccountId);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                String history = rs.getString("transaction_history");
+                String newHistory = (history == null ? "" : history) + "\n" + transactionDetail;
+                updateTransactionHistory(newHistory);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateTransactionHistory(String newHistory) {
+        try {
+            String query = "UPDATE accounts SET transaction_history = ? WHERE account_id = ?";
+            PreparedStatement stmt = connection.prepareStatement(query);
+            stmt.setString(1, newHistory);
+            stmt.setString(2, currentAccountId);
+
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
